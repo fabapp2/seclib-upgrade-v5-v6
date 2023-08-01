@@ -13,10 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.acme.seclib.migrator;
+package com.acme.seclib.migrator.recipes;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.sbm.engine.context.ProjectContext;
 import org.springframework.sbm.engine.recipe.AbstractAction;
@@ -24,13 +27,17 @@ import org.springframework.sbm.engine.recipe.OpenRewriteDeclarativeRecipeAdapter
 import org.springframework.sbm.engine.recipe.RewriteRecipeLoader;
 import org.springframework.sbm.engine.recipe.RewriteRecipeRunner;
 
+
+@AllArgsConstructor
+@NoArgsConstructor
+@SuperBuilder
 /**
  * @author Fabian Krüger
  */
-public class UpradeDependencyAction extends AbstractAction {
-    private final String artifactId;
-    private final String groupId;
-    private final String version;
+public class UpgradeDependencyAction extends AbstractAction {
+    private String artifactId;
+    private String groupId;
+    private String version;
 
     @JsonIgnore
     @Autowired
@@ -39,7 +46,7 @@ public class UpradeDependencyAction extends AbstractAction {
     @Autowired
     private RewriteRecipeRunner rewriteRecipeRunner;
 
-    public UpradeDependencyAction(String groupId, String artifactId, String version) {
+    public UpgradeDependencyAction(String groupId, String artifactId, String version) {
         this.artifactId = artifactId;
         this.groupId = groupId;
         this.version = version;

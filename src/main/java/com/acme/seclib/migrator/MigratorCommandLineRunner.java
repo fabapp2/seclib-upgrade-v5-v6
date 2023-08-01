@@ -28,7 +28,7 @@ import org.springframework.stereotype.Component;
 @Profile("!test")/**
  * @author Fabian Krüger
  */
-public class MigrationCommandLineRunner implements CommandLineRunner {
+public class MigratorCommandLineRunner implements CommandLineRunner {
 
 
     @Autowired

@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.acme.seclib.migrator;
+package com.acme.seclib.migrator.recipes;
 
+import com.acme.seclib.migrator.recipes.MigrateToAnnotationVisitor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.sbm.engine.recipe.OpenRewriteRecipeAdapterAction;

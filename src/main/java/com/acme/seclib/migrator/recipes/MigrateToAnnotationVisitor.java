@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.acme.seclib.migrator;
+package com.acme.seclib.migrator.recipes;
 
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.SourceFile;
@@ -38,21 +38,31 @@ public class MigrateToAnnotationVisitor extends JavaIsoVisitor<ExecutionContext>
 
     private List<J.MethodDeclaration> affectedMethod;
 
+    // visit all method declarations
     @Override
     public J.MethodDeclaration visitMethodDeclaration(J.MethodDeclaration method, ExecutionContext executionContext) {
         J.MethodDeclaration md = super.visitMethodDeclaration(method, executionContext);
-        J.ClassDeclaration cd = getCursor().dropParentUntil(J.ClassDeclaration.class::isInstance).getValue();
-        UsesType usesType = new UsesType(SECURITY_CHECK);
-        SourceFile sourceFile = getCursor().dropParentUntil(SourceFile.class::isInstance).getValue();
-        if (usesType.isAcceptable(sourceFile, executionContext) && usesType.visit(sourceFile, executionContext) != sourceFile) {
+
+        // check if current md uses type com.acme.seclib.SecurityCheck
+        if (shouldHandle(executionContext)) {
+
+            // get statements of method body
             List<Statement> statementsBefore = md.getBody().getStatements();
-            List<Statement> statements = statementsBefore.stream()
+
+            // filter (remove) calls to SecurityCheck.verifyResult(..)
+            List<Statement> statementsAfter = statementsBefore.stream()
                     .filter(this::isNotSecurityCheckCall)
                     .map(Statement.class::cast)
                     .toList();
-            if (statementsBefore.size() != statements.size()) {
-                J.Block body = md.getBody().withStatements(statements);
+
+            // statements changed
+            if (statementsBefore.size() != statementsAfter.size()) {
+
+                // set new list without calls to SecurityCheck.verifyResult(..)
+                J.Block body = md.getBody().withStatements(statementsAfter);
                 md = md.withBody(body);
+
+                // add @Secured annotation to method
                 if (md.getAllAnnotations().stream().noneMatch(a -> a.getSimpleName().equals("Secured"))) {
 
                     this.maybeAddImport(SECURED_ANNOTATION, null, false);
@@ -63,6 +73,12 @@ public class MigrateToAnnotationVisitor extends JavaIsoVisitor<ExecutionContext>
             }
         }
         return md;
+    }
+
+    private boolean shouldHandle(ExecutionContext executionContext) {
+        SourceFile sourceFile = getCursor().dropParentUntil(SourceFile.class::isInstance).getValue();
+        UsesType usesType = new UsesType(SECURITY_CHECK);
+        return usesType.isAcceptable(sourceFile, executionContext) && usesType.visit(sourceFile, executionContext) != sourceFile;
     }
 
     private boolean isNotSecurityCheckCall(Statement statement) {

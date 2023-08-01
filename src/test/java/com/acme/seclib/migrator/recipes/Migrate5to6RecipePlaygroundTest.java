@@ -13,19 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.acme.seclib.migrator;
+package com.acme.seclib.migrator.recipes;
 
+import com.acme.seclib.migrator.MigratorApp;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.openrewrite.ExecutionContext;
 import org.openrewrite.Recipe;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.core.io.Resource;
 import org.springframework.sbm.engine.commands.ApplyCommand;
 import org.springframework.sbm.engine.commands.ScanCommand;
@@ -40,7 +38,6 @@ import org.springframework.sbm.project.resource.BaseProjectResource;
 import org.springframework.sbm.project.resource.RewriteSourceFileHolder;
 import org.springframework.sbm.support.openrewrite.GenericOpenRewriteRecipe;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -50,16 +47,40 @@ import java.util.List;
  */
 @SpringBootTest(classes = MigratorApp.class, properties = "sbm.gitSupportEnabled=true")
 @ActiveProfiles("test")
-public class Migrate5to6RecipeTest {
+public class Migrate5to6RecipePlaygroundTest {
 
     public static final String PROJECT_ROOT = "/Users/fkrueger/demo-nt/demo-2/business-service";
 
     @Nested
-    class UsingComponents {
+    class UsingCommands {
+
         @Autowired
-        private ProjectContextInitializer projectContextInitializer;
+        ScanCommand scanCommand;
+
+        @Autowired
+        ApplyCommand applyCommand;
+
+        @Autowired
+        @Qualifier("secLib5to6MigrationRecipeBean")
+        org.springframework.sbm.engine.recipe.Recipe secLib5to6MigrationRecipe;
+
+        @Test
+        @DisplayName("using commands")
+        @Disabled("Use manually as it migrates the business-service")
+        void usingCommands() {
+            ProjectContext pc = scanCommand.execute(PROJECT_ROOT);
+            applyCommand.execute(pc, "migrate-seclib-5-to-6");
+        }
+
+    }
+
+    @Nested
+    class UsingComponents {
+
         @Autowired
         private PathScanner scanner;
+        @Autowired
+        private ProjectContextInitializer projectContextInitializer;
         @Autowired
         private RewriteRecipeLoader rewriteRecipeLoader;
         @Autowired
@@ -91,6 +112,7 @@ public class Migrate5to6RecipeTest {
                           artifactId: seclib-core
                           newVersion: 6.0.0                
                     """;
+
             // Using an adapter action
             OpenRewriteDeclarativeRecipeAdapter recipeAdapter = new OpenRewriteDeclarativeRecipeAdapter(s, rewriteRecipeLoader, recipeRunner);
             recipeAdapter.apply(pc);
@@ -115,27 +137,4 @@ public class Migrate5to6RecipeTest {
         }
     }
 
-
-    @Nested
-    class UsingCommands {
-
-        @Autowired
-        ScanCommand scanCommand;
-
-        @Autowired
-        ApplyCommand applyCommand;
-
-        @Autowired
-        @Qualifier("secLib5to6MigrationRecipe")
-        org.springframework.sbm.engine.recipe.Recipe secLib5to6MigrationRecipe;
-
-        @Test
-        @DisplayName("using commands")
-        @Disabled("Use manually as it migrates the business-service")
-        void usingCommands() {
-            ProjectContext pc = scanCommand.execute(PROJECT_ROOT);
-            applyCommand.execute(pc, "migrate-seclib-5-to-6");
-        }
-
-    }
 }
