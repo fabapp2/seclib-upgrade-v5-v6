@@ -20,7 +20,10 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.openrewrite.ExecutionContext;
 import org.openrewrite.Recipe;
+import org.openrewrite.RecipeRun;
+import org.openrewrite.SourceFile;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -32,6 +35,8 @@ import org.springframework.sbm.engine.context.ProjectContextSerializer;
 import org.springframework.sbm.engine.recipe.OpenRewriteDeclarativeRecipeAdapter;
 import org.springframework.sbm.engine.recipe.RewriteRecipeLoader;
 import org.springframework.sbm.engine.recipe.RewriteRecipeRunner;
+import org.springframework.sbm.project.Execution;
+import org.springframework.sbm.project.parser.MavenProjectParser;
 import org.springframework.sbm.project.parser.PathScanner;
 import org.springframework.sbm.project.parser.ProjectContextInitializer;
 import org.springframework.sbm.project.resource.BaseProjectResource;
@@ -75,6 +80,7 @@ public class Migrate5to6RecipePlaygroundTest {
     }
 
     @Nested
+    @Disabled
     class UsingComponents {
 
         @Autowired
@@ -133,6 +139,34 @@ public class Migrate5to6RecipePlaygroundTest {
                     .streamIncludingDeleted()
                     .filter(BaseProjectResource::hasChanges)
                     .map(RewriteSourceFileHolder::print)
+                    .forEach(System.out::println);
+        }
+    }
+
+    @Nested
+    @Disabled
+    class OnlyOR {
+
+        @Autowired
+        private MavenProjectParser mavenProjectParser;
+        @Autowired
+        private PathScanner scanner;
+        @Autowired
+        private ExecutionContext executionContext;
+
+        @Test
+        @DisplayName("using OpenRewrite")
+        void usingOpenRewrite() {
+            Path baseDir = Path.of(PROJECT_ROOT);
+            List<Resource> resources = scanner.scan(baseDir);
+            List<SourceFile> ast = mavenProjectParser.parse(baseDir, resources);
+
+            Recipe migrateRecipe = new GenericOpenRewriteRecipe<>(() -> new MigrateToAnnotationVisitor());
+
+            RecipeRun recipeRun = migrateRecipe.run(ast, executionContext);
+
+            recipeRun.getResults().stream().map(r -> r.getAfter())
+                    .map(SourceFile::printAll)
                     .forEach(System.out::println);
         }
     }

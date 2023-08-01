@@ -20,12 +20,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import org.openrewrite.maven.UpgradeDependencyVersion;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.sbm.engine.context.ProjectContext;
-import org.springframework.sbm.engine.recipe.AbstractAction;
-import org.springframework.sbm.engine.recipe.OpenRewriteDeclarativeRecipeAdapter;
-import org.springframework.sbm.engine.recipe.RewriteRecipeLoader;
-import org.springframework.sbm.engine.recipe.RewriteRecipeRunner;
+import org.springframework.sbm.engine.recipe.*;
 
 
 @AllArgsConstructor
